@@ -1,0 +1,74 @@
+name: Build APKs on Tag Push
+
+on:
+  push:
+    tags:
+      - 'v*' # 当推送以 'v' 开头的标签时触发，例如 v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17' # 推荐使用 Java 17 或更高版本
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable' # 或者指定具体版本号，如 '3.19.0'
+          cache: true
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Build APK for armeabi-v7a
+        run: flutter build apk --target-platform android-arm --split-per-abi
+
+      - name: Build APK for arm64-v8a
+        run: flutter build apk --target-platform android-arm64 --split-per-abi
+
+      - name: Build APK for x86_64
+        run: flutter build apk --target-platform android-x64 --split-per-abi
+
+      # 查找生成的 APK 文件路径
+      - name: Find APKs
+        id: find_apks
+        run: |
+          ARMEABI_V7A=$(find build/app/outputs/flutter-apk -name "*armeabi-v7a.apk" -type f | head -n 1)
+          ARM64_V8A=$(find build/app/outputs/flutter-apk -name "*arm64-v8a.apk" -type f | head -n 1)
+          X86_64=$(find build/app/outputs/flutter-apk -name "*x86_64.apk" -type f | head -n 1)
+          echo "APK_ARMV7=$ARMEABI_V7A" >> $GITHUB_ENV
+          echo "APK_ARM64=$ARM64_V8A" >> $GITHUB_ENV
+          echo "APK_X64=$X86_64" >> $GITHUB_ENV
+          echo "Found armeabi-v7a APK: $ARMEABI_V7A"
+          echo "Found arm64-v8a APK: $ARM64_V8A"
+          echo "Found x86_64 APK: $X86_64"
+
+      # 获取标签名称作为版本号
+      - name: Get Version
+        id: get_version
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      # 创建 GitHub Release 并上传 APK 文件
+      - name: Create Release and Upload APKs
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }} # 使用触发此工作流的标签
+          name: Release ${{ steps.get_version.outputs.VERSION }} # Release 名称
+          draft: false # 设置为 true 可以创建草稿
+          prerelease: false # 设置为 true 表示是预发布
+          generate_release_notes: true # 自动生成发布说明 (基于 commit)
+          files: |
+            ${{ env.APK_ARMV7 }}
+            ${{ env.APK_ARM64 }}
+            ${{ env.APK_X64 }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 用于创建 Release 的内置 token
