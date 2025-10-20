@@ -3,12 +3,14 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zhic_tool/func/get_data.dart';
+import 'package:zhic_tool/func/version_checker.dart';
 import 'package:zhic_tool/pages/color_lens/colorlens_page.dart';
 import 'package:zhic_tool/pages/empty_classroom/emptysearch_page.dart';
 import 'package:zhic_tool/pages/login/login_page.dart';
 import 'package:zhic_tool/pages/score/score_page.dart';
 import 'package:zhic_tool/pages/vocation/vocation_page.dart';
 import 'package:zhic_tool/widgets/schedule.dart';
+import 'package:zhic_tool/widgets/updatedialog.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -340,6 +342,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 );
               }),
             ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onPrimary,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: _buildTile('检测更新', Icons.update, _checkForUpdates),
+            ),
           ],
         ),
       ),
@@ -351,5 +362,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       onTap: onTap,
       child: ListTile(title: Text(title), leading: Icon(icon), dense: true),
     );
+  }
+
+  Future<void> _checkForUpdates() async {
+    Fluttertoast.showToast(msg: '正在检查更新...');
+    final updateInfo = await VersionChecker.checkForUpdate();
+    if (context.mounted && updateInfo != null) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => Updatedialog(
+          latestVersion: updateInfo.latestVersion,
+          releaseNotes: updateInfo.releaseNotes,
+          downloadUrl: updateInfo.downloadUrl,
+        ),
+      );
+    } else {
+      Fluttertoast.showToast(msg: '已经是最新版本');
+    }
   }
 }
