@@ -1,0 +1,37 @@
+name: zhic_tool
+description: "A new Flutter project."
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.5.3
+  change_app_package_name: ^1.5.0
+  flutter_inappwebview: ^6.1.5
+  http: ^1.5.0
+  fluttertoast: ^9.0.0
+  html: ^0.15.6
+  path_provider: ^2.1.5
+  intl: ^0.20.2
+  flutter_launcher_icons: ^0.14.4
+  crypto: ^3.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+flutter:
+  uses-material-design: true
+  assets:
+      - assets/icon/icon.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_monochrome: "assets/icon/icon.png"
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/icon/icon.png"
