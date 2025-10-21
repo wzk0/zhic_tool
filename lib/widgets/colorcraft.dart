@@ -27,9 +27,7 @@ class Colorcraft extends StatelessWidget {
       await prefs.setString('colorSeed', colorName);
       themeColorNotifier.value = colorSeed;
       Fluttertoast.showToast(msg: '主题色已切换为 $colorName');
-    } else {
-      debugPrint('Color not found in map!');
-    }
+    } else {}
   }
 
   @override

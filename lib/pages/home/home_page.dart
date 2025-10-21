@@ -378,8 +378,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildWeatherContainer() {
-    debugPrint(weatherData.toString());
-
     if (weatherData.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(16),

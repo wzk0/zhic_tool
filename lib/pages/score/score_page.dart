@@ -196,7 +196,6 @@ class _ScorePageState extends State<ScorePage> {
       final credits = (course['credits'] as num?)?.toDouble() ?? 0.0;
       if (credits <= 0) continue;
       final gp = (course['gp'] as num?)?.toDouble() ?? 0.0;
-      debugPrint(gp.toString());
       final gradeStr = course['gaGrade'] as String?;
       final grade = double.tryParse(gradeStr ?? '') ?? 0.0;
       totalGpWeight += gp * credits;
@@ -207,7 +206,6 @@ class _ScorePageState extends State<ScorePage> {
     final averageScore = totalCredits > 0
         ? (totalScoreWeight / totalCredits)
         : 0.0;
-    debugPrint(gpa.toString());
     return {'GPA': gpa, 'credits': totalCredits, 'averageScore': averageScore};
   }
 }
