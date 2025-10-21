@@ -3,14 +3,12 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zhic_tool/func/get_data.dart';
-import 'package:zhic_tool/func/version_checker.dart';
 import 'package:zhic_tool/pages/color_lens/colorlens_page.dart';
 import 'package:zhic_tool/pages/empty_classroom/emptysearch_page.dart';
 import 'package:zhic_tool/pages/login/login_page.dart';
 import 'package:zhic_tool/pages/score/score_page.dart';
 import 'package:zhic_tool/pages/vocation/vocation_page.dart';
 import 'package:zhic_tool/widgets/schedule.dart';
-import 'package:zhic_tool/widgets/updatedialog.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -26,6 +24,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   String appBarSubtitle = '课表速览, 离线缓存';
   int weekIndex = 0;
   String startDate = '2025-09-08';
+  Map weatherData = {};
 
   @override
   void initState() {
@@ -48,6 +47,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final startInfo = await getData(
       'https://eams.tjzhic.edu.cn/student/ws/semester/get/82',
     );
+    Map weatherdata = await _getWeather();
     if (data.isNotEmpty) {
       final newWeekIndex = data['weekIndex'] as int;
       setState(() {
@@ -55,6 +55,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         appBarSubtitle = data['currentSemester'];
         weekIndex = newWeekIndex;
         startDate = startInfo['startDate'];
+        weatherData = weatherdata;
       });
       if (newWeekIndex >= 1 && newWeekIndex <= 19 && mounted) {
         _tabController.animateTo(newWeekIndex - 1);
@@ -206,151 +207,152 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final student = data['studentTableVms'][0];
     return Drawer(
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ListView(
-          padding: EdgeInsets.zero,
+        padding: const EdgeInsets.only(top: 50, left: 8, right: 8, bottom: 18),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const SizedBox(height: 40),
-            Stack(
+            Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
-                  child: ListTile(
-                    title: Text(
-                      student['name'],
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    subtitle: Text(
-                      '${student['department']}\n${student['adminclass']}',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.outline,
+                Stack(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        color: Theme.of(context).colorScheme.onPrimary,
                       ),
-                    ),
-                    leading: CircleAvatar(
-                      radius: 25,
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer,
-                      child: Text(
-                        student['name'].substring(0, 1),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                      child: ListTile(
+                        title: Text(
+                          student['name'],
+                          style: TextStyle(fontSize: 18),
+                        ),
+                        subtitle: Text(
+                          '${student['department']}\n${student['adminclass']}',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                        ),
+                        leading: CircleAvatar(
+                          radius: 25,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer,
+                          child: Text(
+                            student['name'].substring(0, 1),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
                     ),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        padding: EdgeInsets.only(
+                          left: 8,
+                          right: 8,
+                          top: 4,
+                          bottom: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.tertiaryContainer,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Text(
+                          student['code'],
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Theme.of(context).colorScheme.tertiary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildTile('空教室', Icons.timelapse, () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return EmptysearchPage(week: weekIndex);
+                            },
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 10),
+                      _buildTile('我的成绩', Icons.auto_graph_rounded, () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return const ScorePage();
+                            },
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 10),
+                      _buildTile('考试信息', Icons.edit, () {
+                        Fluttertoast.showToast(msg: '暂未开放');
+                      }),
+                      const SizedBox(height: 10),
+                      _buildTile('选课', Icons.class_, () {
+                        Fluttertoast.showToast(msg: '暂未开放');
+                      }),
+                      const SizedBox(height: 10),
+                      _buildTile('评教', Icons.comment, () {
+                        Fluttertoast.showToast(msg: '暂未开放');
+                      }),
+                      const SizedBox(height: 10),
+                      _buildTile('请假', Icons.directions_bike, () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return VocationPage();
+                            },
+                          ),
+                        );
+                      }),
+                    ],
                   ),
                 ),
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Container(
-                    padding: EdgeInsets.only(
-                      left: 8,
-                      right: 8,
-                      top: 4,
-                      bottom: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.tertiaryContainer,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Text(
-                      student['code'],
-                      style: TextStyle(fontSize: 10),
-                    ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    borderRadius: BorderRadius.circular(18),
                   ),
+                  child: _buildTile('主题色', Icons.color_lens, () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const ColorlensPage();
+                        },
+                      ),
+                    );
+                  }),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onPrimary,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Column(
-                children: [
-                  _buildTile('空教室', Icons.timelapse, () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return EmptysearchPage(week: weekIndex);
-                        },
-                      ),
-                    );
-                  }),
-                  const SizedBox(height: 10),
-                  _buildTile('我的成绩', Icons.auto_graph_rounded, () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return const ScorePage();
-                        },
-                      ),
-                    );
-                  }),
-                  const SizedBox(height: 10),
-                  _buildTile('考试信息', Icons.edit, () {
-                    Fluttertoast.showToast(msg: '暂未开放');
-                  }),
-                  const SizedBox(height: 10),
-                  _buildTile('选课', Icons.class_, () {
-                    Fluttertoast.showToast(msg: '暂未开放');
-                  }),
-                  const SizedBox(height: 10),
-                  _buildTile('评教', Icons.comment, () {
-                    Fluttertoast.showToast(msg: '暂未开放');
-                  }),
-                  const SizedBox(height: 10),
-                  _buildTile('请假', Icons.directions_bike, () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return VocationPage();
-                        },
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onPrimary,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: _buildTile('主题色', Icons.color_lens, () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return const ColorlensPage();
-                    },
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onPrimary,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: _buildTile('检测更新', Icons.update, _checkForUpdates),
-            ),
+            _buildWeatherContainer(),
           ],
         ),
       ),
@@ -364,20 +366,219 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> _checkForUpdates() async {
-    Fluttertoast.showToast(msg: '正在检查更新...');
-    final updateInfo = await VersionChecker.checkForUpdate();
-    if (context.mounted && updateInfo != null) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) => Updatedialog(
-          latestVersion: updateInfo.latestVersion,
-          releaseNotes: updateInfo.releaseNotes,
-          downloadUrl: updateInfo.downloadUrl,
-        ),
-      );
+  Future<Map> _getWeather() async {
+    final data = await getData(
+      'http://t.weather.itboy.net/api/weather/city/101030500',
+    );
+    if (data.isNotEmpty) {
+      return data;
     } else {
-      Fluttertoast.showToast(msg: '已经是最新版本');
+      return {};
+    }
+  }
+
+  Widget _buildWeatherContainer() {
+    debugPrint(weatherData.toString());
+
+    if (weatherData.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
+        child: const Center(child: Text('数据加载失败')),
+      );
+    }
+
+    final wData = weatherData['data'];
+    final cityInfo = weatherData['cityInfo'];
+    final todayForecast = wData['forecast']?[0];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.onPrimary,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  '${cityInfo['parent']}·${cityInfo['city']}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Icon(
+                    Icons.update,
+                    size: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    weatherData['time'] ?? '',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: _getWeatherIcon(todayForecast['type']),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    '${todayForecast['low']?.split(' ')[1]?.replaceAll('℃', '') ?? '?'} ~ ${todayForecast['high']?.split(' ')[1]?.replaceAll('℃', '') ?? '?'}°C',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    todayForecast['type'] ?? 'N/A',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.water_drop_outlined,
+                        size: 10,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        '湿度 ${wData['shidu'] ?? 'N/A'}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.tertiaryContainer,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      wData['quality'] ?? 'N/A',
+                      style: TextStyle(
+                        fontSize: 8,
+                        color: Theme.of(context).colorScheme.tertiary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                todayForecast['notice'] ?? 'N/A',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              Row(
+                children: [
+                  Icon(
+                    Icons.air_outlined,
+                    size: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${todayForecast['fx'] ?? 'N/A'} ${todayForecast['fl'] ?? 'N/A'}',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Icon _getWeatherIcon(String? type) {
+    if (type == null) return const Icon(Icons.cloud_outlined, size: 35);
+
+    switch (type) {
+      case '多云':
+        return Icon(
+          Icons.cloud_outlined,
+          size: 35,
+          color: Theme.of(context).colorScheme.primary,
+        );
+      case '晴':
+        return Icon(
+          Icons.wb_sunny_outlined,
+          size: 35,
+          color: Theme.of(context).colorScheme.primary,
+        );
+      case '阴':
+        return Icon(
+          Icons.cloud_queue_outlined,
+          size: 35,
+          color: Theme.of(context).colorScheme.primary,
+        );
+      case '霾':
+        return Icon(
+          Icons.smoking_rooms_outlined,
+          size: 35,
+          color: Theme.of(context).colorScheme.primary,
+        );
+      default:
+        return Icon(
+          Icons.cloud_outlined,
+          size: 35,
+          color: Theme.of(context).colorScheme.primary,
+        );
     }
   }
 }

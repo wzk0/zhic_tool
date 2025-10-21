@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zhic_tool/pages/home/home_page.dart';
 
+//weather http://t.weather.itboy.net/api/weather/city/101030500
+
 // 颜色名字映射表
 final Map<String, Color> colorMap = {
   'red': Colors.red,

@@ -118,6 +118,7 @@ class _ScorePageState extends State<ScorePage> {
                                       color: Theme.of(
                                         context,
                                       ).colorScheme.tertiary,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
