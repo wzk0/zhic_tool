@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zhic_tool/pages/home/home_page.dart';
 
-//weather http://t.weather.itboy.net/api/weather/city/101030500
-
-// 颜色名字映射表
 final Map<String, Color> colorMap = {
   'red': Colors.red,
   'blue': Colors.blue,
@@ -21,11 +18,9 @@ final themeColorNotifier = ValueNotifier<Color>(Colors.blue);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   final prefs = await SharedPreferences.getInstance();
   String? savedColorName = prefs.getString('colorSeed');
   themeColorNotifier.value = colorMap[savedColorName] ?? Colors.blue;
-
   runApp(const MyApp());
 }
 
