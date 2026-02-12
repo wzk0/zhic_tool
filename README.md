@@ -1,3 +1,5 @@
+请转至: https://github.com/wzk0/zhanghuan
+
 # 掌环
 
 一个天津理工大学中环信息学院学生可使用小工具🔧.
